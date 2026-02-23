@@ -93,3 +93,8 @@ The goal is to validate Jenkins as a CI/CD tool, integrate it with GitHub, and e
   - `Jenkinsfile` for pipeline  
   - Screenshots folder  
 - Collaborator: ClintonChe (reviewer assigned)
+
+---
+Author
+Sylvia
+Jenkins Capstone Project
