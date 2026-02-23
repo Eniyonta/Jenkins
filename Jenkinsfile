@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+   agent { label 'ecs-agent' }
     stages {
         stage('Clone') {
             steps {
