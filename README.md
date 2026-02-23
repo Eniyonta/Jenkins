@@ -95,6 +95,5 @@ The goal is to validate Jenkins as a CI/CD tool, integrate it with GitHub, and e
 - Collaborator: ClintonChe (reviewer assigned)
 
 ---
-Author
-Sylvia
-Jenkins Capstone Project
+Author:
+Sylvia, Jenkins Capstone Project
