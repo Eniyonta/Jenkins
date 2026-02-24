@@ -1,67 +1,90 @@
 pipeline {
-    agent { label 'ecs-agent' }
+    agent any  // Runs on the master node
 
     environment {
-        AWS_REGION    = 'us-east-1'
-        ACCOUNT_ID    = '514985057519'
-        ECR_REPO      = 'jenkins-app'
-        CLUSTER_NAME  = 'jenkins-fargate-cluster'
-        SERVICE_NAME  = 'jenkins-task-service'
-        IMAGE_TAG     = "${env.BUILD_NUMBER}"
+        AWS_REGION = 'us-east-1'
+        ACCOUNT_ID = '514985057519'
+        ECR_REPO = 'jenkins-app'
+        CLUSTER_NAME = 'jenkins-fargate-cluster'
+        SERVICE_NAME = 'jenkins-task-service'
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
     }
 
-    options { timestamps() }
+    options {
+        timestamps()
+    }
 
     stages {
-        stage('Checkout') {
+
+        stage('Checkout Source Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/Eniyonta/Jenkins.git'
+                echo "Cloning repository..."
+                git branch: 'main',
+                    url: 'https://github.com/Eniyonta/Jenkins.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${ECR_REPO}:${IMAGE_TAG} ."
+                echo "Building Docker image..."
+                sh '''
+                docker build -t jenkins-app:$IMAGE_TAG .
+                '''
             }
         }
 
-        stage('Login to ECR') {
+        stage('Login to Amazon ECR') {
             steps {
-                sh """
-                aws ecr get-login-password --region ${AWS_REGION} | \
-                docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-                """
+                echo "Logging into ECR..."
+                sh '''
+                aws ecr get-login-password --region $AWS_REGION | \
+                docker login --username AWS --password-stdin \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                '''
             }
         }
 
         stage('Tag Docker Image') {
             steps {
-                sh "docker tag ${ECR_REPO}:${IMAGE_TAG} ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
+                sh '''
+                docker tag jenkins-app:$IMAGE_TAG \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                '''
             }
         }
 
-        stage('Push to ECR') {
+        stage('Push Image to ECR') {
             steps {
-                sh "docker push ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
+                echo "Pushing image to ECR..."
+                sh '''
+                docker push \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                '''
             }
         }
 
-        stage('Deploy to ECS') {
+        stage('Deploy to ECS Fargate') {
             steps {
-                sh """
+                echo "Triggering ECS deployment..."
+                sh '''
                 aws ecs update-service \
-                --cluster ${CLUSTER_NAME} \
-                --service ${SERVICE_NAME} \
+                --cluster $CLUSTER_NAME \
+                --service $SERVICE_NAME \
                 --force-new-deployment \
-                --region ${AWS_REGION}
-                """
+                --region $AWS_REGION
+                '''
             }
         }
     }
 
     post {
-        success { echo '🚀 Deployment successful!' }
-        failure { echo '❌ Deployment failed!' }
+        success {
+            echo '🚀 Deployment to AWS Fargate Successful!'
+        }
+        failure {
+            echo '❌ Pipeline Failed!'
+        }
     }
 }
+
 
