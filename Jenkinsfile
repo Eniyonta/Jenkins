@@ -27,52 +27,51 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "Building Docker image..."
-                sh '''
-                docker build -t $jenkins-app:$IMAGE_TAG .
-                '''
+                sh """
+                docker build -t $ECR_REPO:$IMAGE_TAG .
+                """
             }
         }
 
         stage('Login to Amazon ECR') {
             steps {
                 echo "Logging into ECR..."
-                sh '''
-                aws ecr get-login-password --region $us-east-1 | \
+                sh """
+                aws ecr get-login-password --region $AWS_REGION | \
                 docker login --username AWS --password-stdin \
-                $514985057519.dkr.ecr.$us-east-1.amazonaws.com
-                '''
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                """
             }
         }
 
         stage('Tag Docker Image') {
             steps {
-                sh '''
-                docker tag $jenkins-app:$IMAGE_TAG \
-                $514985057519.dkr.ecr.$us-east-1.amazonaws.com/$jenkins-app:$IMAGE_TAG
-                '''
+                sh """
+                docker tag $ECR_REPO:$IMAGE_TAG \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                """
             }
         }
 
         stage('Push Image to ECR') {
             steps {
                 echo "Pushing image to ECR..."
-                sh '''
-                docker push \
-                $514985057519.dkr.ecr.$us-east-1.amazonaws.com/$jenkins-app:$IMAGE_TAG
-                '''
+                sh """
+                docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                """
             }
         }
 
         stage('Deploy to ECS Fargate') {
             steps {
                 echo "Triggering ECS deployment..."
-                sh '''
+                sh """
                 aws ecs update-service \
                 --cluster $CLUSTER_NAME \
                 --service $SERVICE_NAME \
                 --force-new-deployment \
                 --region $AWS_REGION
-                '''
+                """
             }
         }
     }
@@ -86,4 +85,5 @@ pipeline {
         }
     }
 }
+
 
