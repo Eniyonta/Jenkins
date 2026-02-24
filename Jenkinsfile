@@ -1,5 +1,5 @@
 pipeline {
-    agent any  // Runs on the master node
+    agent { label 'ecs-agent' } // exactly the same as the label in Jenkins
 
     environment {
         AWS_REGION = 'us-east-1'
