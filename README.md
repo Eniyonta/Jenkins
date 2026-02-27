@@ -6,7 +6,7 @@ This project demonstrates a **full CI/CD pipeline using Jenkins**.
 It consists of two parts:
 
 - **Part 1:** Traditional Jenkins deployment on EC2  
-- **Part 2:** Serverless Jenkins deployment on AWS Fargate  
+- **Part 2:** Serverless Jenkins deployment on AWS  
 
 The goal is to validate Jenkins as a CI/CD tool, integrate it with GitHub, and explore modern **serverless CI/CD architecture**.
 
