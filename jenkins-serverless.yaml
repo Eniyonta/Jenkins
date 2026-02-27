@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Serverless Jenkins on AWS (minimal working example)
+
+Parameters:
+  ControllerImage:
+    Type: String
+    Description: ECR image URI for Jenkins Controller (optional, not used for Lambda)
+
+Resources:
+
+  JenkinsS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "jenkins-serverless-${AWS::AccountId}-${AWS::Region}"
+
+  JenkinsLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "JenkinsServerlessLambdaRole-${AWS::AccountId}"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  JenkinsLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: jenkins-serverless-controller
+      Handler: index.handler
+      Runtime: python3.9
+      Role: !GetAtt JenkinsLambdaRole.Arn
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              print("Serverless Jenkins Lambda triggered")
+              return {"status": "ok"}
+
+Outputs:
+  JenkinsS3Bucket:
+    Description: S3 bucket storing Jenkins data
+    Value: !Ref JenkinsS3Bucket
+
+  JenkinsLambdaArn:
+    Description: ARN of Jenkins Lambda function
+    Value: !GetAtt JenkinsLambdaFunction.Arn
