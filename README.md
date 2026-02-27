@@ -47,44 +47,50 @@ The goal is to validate Jenkins as a CI/CD tool, integrate it with GitHub, and e
 
 ---
 
-## 🔹 Part 2 – Serverless Jenkins on AWS Fargate
+## 🔹 Part 2 – Serverless Jenkins on AWS
 
 ### Overview
 
-- Jenkins deployed **serverlessly** using AWS ECS Fargate  
-- Dynamic agents created automatically for each pipeline run  
-- Jenkins master persists data in **EFS**  
-- Access through **Application Load Balancer (ALB)**  
-- CloudWatch used for logging all builds and agents
+- Jenkins deployed **serverlessly** using **AWS Lambda** for the controller  
+- Deployment automated via **CloudFormation** (`jenkins-serverless.yaml`)  
+- Jenkins data persisted in **S3 bucket** (`JenkinsS3Bucket`)  
+- Lambda handles pipeline orchestration and execution  
+- Fully managed, scalable, and **no server maintenance required** 
 
 ### Architecture Highlights
 
-- Jenkins master container runs on Fargate  
-- Build agents spin up dynamically on demand  
-- Agents auto-terminate after pipeline completion  
-- Fully managed, scalable, and **no server maintenance required**  
+- CloudFormation provisions all necessary AWS resources:  
+  - S3 bucket for Jenkins data  
+  - Lambda function as Jenkins controller  
+  - IAM roles for Lambda execution and S3 access  
+  - CloudWatch logging  
+- Serverless architecture ensures auto-scaling and no EC2/Fargate management  
 
 ### Pipeline Highlights
 
-- Pipeline executed on **Fargate agents**  
-- Same stages: Checkout → Build → Test → Deploy  
-- Logs collected in CloudWatch for monitoring and troubleshooting
+- Pipeline executed on serverless infrastructure  
+- Same stages: **Checkout → Build → Test → Deploy**  
+- Logs can be reviewed in **CloudWatch** for debugging and monitoring  
+- CloudFormation makes redeployment and updates reproducible  
 
 ### Key Findings
 
 - Serverless Jenkins eliminates server management overhead  
-- Auto-scaling agents reduce cost and improve efficiency  
-- EFS ensures persistent Jenkins data even when containers terminate  
-- Initial setup is more complex but provides a **modern, scalable CI/CD architecture**
+- Fully scalable with AWS-managed resources  
+- S3 ensures persistent storage for Jenkins data  
+- CloudFormation simplifies infrastructure provisioning and version control  
 
 ### Screenshots
 
-- Architecture diagram showing ECS cluster, Fargate agents, and EFS  
-- Pipeline execution showing dynamic agent creation and termination  
-- CloudWatch logs for pipeline builds  
+1. **Stack Overview**  
+   ![Stack Overview](screenshots/stack overview.png)  
 
----
+2. **Stack Outputs**  
+   ![Stack Outputs](screenshots/stack outputs.png)  
 
+3. **Stack Resources**  
+   ![Stack Resources](screenshots/stack resources.png)
+   
 ## 🔹 GitHub Repository
 
 - Repository Name: **Jenkins**  
